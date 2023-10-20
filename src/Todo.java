@@ -1,104 +1,67 @@
 import java.util.Scanner;
 
-public class Todo {
+class TodoItem {
+    private String description;
 
-    public static String[] model = new String[10];
-
-    public static void main(String[] args) {
-        viewTodo();
+    public TodoItem(String description) {
+        this.description = description;
     }
 
-    public static void showTodo() {
+    public String getDescription() {
+        return description;
+    }
+}
+
+class TodoList {
+    protected TodoItem[] model;
+    protected int size;
+
+    public TodoList(int initialCapacity) {
+        model = new TodoItem[initialCapacity];
+        size = 0;
+    }
+
+    public void showTodo() {
         System.out.println("ToDo list");
         System.out.println("---------------");
-        for (int i = 0; i < model.length; i++) {
-            String todo = model[i];
+        for (int i = 0; i < size; i++) {
+            TodoItem todo = model[i];
             int no = i + 1;
-            if (todo != null) {
-                System.out.println(no + ". " + todo);
-            }
+            System.out.println(no + ". " + todo.getDescription());
         }
     }
 
-//    public static void testShow(){
-//        model[0] = "Java";
-//        model[1] = "OOP";
-//        showTodo();
-//    }
-
-    public static void addTodo(String todo) {
-
-        boolean isFull = true;
-        for (int i = 0; i < model.length; i++) {
-            if (model[i] == null) {
-                isFull = false;
-                break;
-            }
+    public void addTodoItem(String todoDescription) {
+        if (size == model.length) {
+            // If the array is full, double its size
+            TodoItem[] temp = model;
+            model = new TodoItem[model.length * 2];
+            System.arraycopy(temp, 0, model, 0, temp.length);
         }
-
-        if (isFull) {
-            String[] temp = model;
-            model = new String[model.length * 2];
-            for (int i = 0; i < temp.length; i++) {
-                model[i] = temp[i];
-            }
-        }
-        for (int i = 0; i < model.length; i++) {
-            if (model[i] == null) {
-                model[i] = todo;
-                break;
-            }
-        }
+        model[size++] = new TodoItem(todoDescription);
     }
 
-//    public static void testAdd(){
-//        for (int i = 0; i < 25; i++){
-//            addTodo("contoh" + i);
-//        }
-//    }
-
-    public static boolean delTodo(Integer number) {
-        if ((number - 1) >= model.length) {
+    public boolean delTodoItem(int number) {
+        if (number < 1 || number > size) {
             return false;
-        } else if (model[number - 1] == null) {
-            return false;
-        } else {
-            for (int i = (number - 1); i < model.length; i++) {
-                if (i == (model.length - 1)) {
-                    model[i] = null;
-                } else {
-                    model[i] = model[i + 1];
-                }
-            }
-            return true;
         }
+
+        for (int i = number - 1; i < size - 1; i++) {
+            model[i] = model[i + 1];
+        }
+        model[size - 1] = null;
+        size--;
+        return true;
+    }
+}
+
+class InteractiveTodoList extends TodoList {
+    public InteractiveTodoList(int initialCapacity) {
+        super(initialCapacity);
     }
 
-//    public static void testDel(){
-//        model[0] = "satu";
-//        model[1] = "dua";
-//        model[2] = "tiga";
-//        model[3] = "empat";
-//        showTodo();
-//        System.out.println("hapus data ke 2");
-//        delTodo(2);
-//        showTodo();
-//    }
-
-    public static String input(String info) {
-        String data;
-        Scanner input = new Scanner(System.in);
-        System.out.println(info + " :");
-        data = input.nextLine();
-        return data;
-    }
-
-//    public static void testInput() {
-//        String nama = input("Nama");
-//        System.out.println("hai " + nama);
-//    }
-
-    public static void viewTodo() {
+    public void viewTodo() {
+        Scanner scanner = new Scanner(System.in);
         while (true) {
             showTodo();
             System.out.println("===============");
@@ -107,55 +70,53 @@ public class Todo {
             System.out.println("1. Menambah ToDo");
             System.out.println("2. Menghapus ToDo");
             System.out.println("x. Keluar");
-            String input = input("Pilih");
-            if(input.equals("1")){
-                viewAddTodo();
-            }else if(input.equals("2")){
-                viewDelTodo();
-            }else if(input.equals("x")){
-                break ;
-            }else {
-                System.out.println("Pilihan anda tidak ada");
+            String input = input("Pilih", scanner);
+            switch (input) {
+                case "1":
+                    viewAddTodoItem(scanner);
+                    break;
+                case "2":
+                    viewDelTodoItem(scanner);
+                    break;
+                case "x":
+                    break;
+                default:
+                    System.out.println("Pilihan anda tidak ada");
+                    break;
             }
+
         }
     }
 
-    public static void viewAddTodo() {
+    private String input(String info, Scanner scanner) {
+        System.out.println(info + " :");
+        return scanner.nextLine();
+    }
+
+    private void viewAddTodoItem(Scanner scanner) {
         System.out.println("Menambah ToDo List");
-        String todo = input("x (jika ingin batal)");
-        if (todo.equals("x")) {
-
-        } else {
-            addTodo(todo);
+        String todo = input("x (jika ingin batal)", scanner);
+        if (!todo.equals("x")) {
+            addTodoItem(todo);
         }
     }
 
-//    public static void testViewAdd(){
-//        addTodo("makan");
-//        addTodo("minum ");
-//        showTodo();
-//        viewAddTodo();
-//        showTodo();
-//    }
-
-    public static void viewDelTodo() {
+    private void viewDelTodoItem(Scanner scanner) {
         System.out.println("Menghapus ToDo");
-        String number = input("Nomor yang ingin dihapus : (x) jika ingin kembali");
-        if (number.equals("x")) {
-
-        } else {
-            boolean success = delTodo(Integer.valueOf(number));
+        String numberStr = input("Nomor yang ingin dihapus : (x) jika ingin kembali", scanner);
+        if (!numberStr.equals("x")) {
+            int number = Integer.parseInt(numberStr);
+            boolean success = delTodoItem(number);
             if (!success) {
-                System.out.println("Gagal menghapus ToDo " + number);
+                System.out.println("Gagal menghapus ToDo nomor " + number);
             }
         }
     }
+}
 
-//    public static void testViewDel(){
-//        addTodo("makan");
-//        addTodo("minum ");
-//        showTodo();
-//        viewDelTodo();
-//        showTodo();
-//    }
+public class Todo {
+    public static void main(String[] args) {
+        InteractiveTodoList interactiveTodoList = new InteractiveTodoList(2);
+        interactiveTodoList.viewTodo();
+    }
 }
